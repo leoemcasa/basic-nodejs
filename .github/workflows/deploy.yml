@@ -1,0 +1,56 @@
+# .github/workflows/deploy.yml
+
+name: Build and Deploy to K3S
+
+on:
+  push:
+    branches:
+      - main # Trigger this workflow on every push to the main branch
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest # The build can run on a standard GitHub runner
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/cm-to-inch-api:${{ github.sha }}
+
+  deploy:
+    needs: build-and-push # This job waits for the build to finish
+    runs-on: self-hosted # IMPORTANT: This job MUST run on your local runner
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install and configure Rancher CLI
+        run: |
+          # Download the Rancher CLI
+          wget https://github.com/rancher/cli/releases/download/v2.8.2/rancher-linux-amd64-v2.8.2.tar.gz
+          tar -zxvf rancher-linux-amd64-v2.8.2.tar.gz
+          sudo mv rancher-*/rancher /usr/local/bin/
+          # Login to your Rancher instance
+          # The --insecure is needed for self-signed certs typical in labs.
+          rancher login ${{ secrets.RANCHER_URL }} --token ${{ secrets.RANCHER_TOKEN }} --insecure
+          # Set the context to your imported k3s cluster
+          rancher context switch clk3s-nada
+
+      - name: Update Kubernetes Manifest and Deploy
+        run: |
+          # Use 'sed' to replace the placeholder image name in the deployment file
+          # with the newly built image tag (based on the Git commit SHA)
+          sed -i 's|image: .*|image: ${{ secrets.DOCKERHUB_USERNAME }}/cm-to-inch-api:${{ github.sha }}|g' k8s/deployment.yaml
+          
+          # Apply the updated manifest to your cluster
+          rancher kubectl apply -f k8s/deployment.yaml

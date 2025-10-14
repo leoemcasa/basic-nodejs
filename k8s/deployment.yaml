@@ -1,0 +1,42 @@
+# k8s/deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cm-to-inch-api-deployment
+spec:
+  replicas: 2 # Run two instances for availability
+  selector:
+    matchLabels:
+      app: cm-to-inch-api
+  template:
+    metadata:
+      labels:
+        app: cm-to-inch-api
+    spec:
+      containers:
+      - name: api
+        # IMPORTANT: This image name will be set by the GitHub Action
+        image: leoemcasa/cm-to-inch-api:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: GOOGLE_API_TOKEN
+          valueFrom:
+            secretKeyRef:
+              # This secret will need to be created in your K3s cluster
+              name: api-secrets
+              key: google_api_token
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cm-to-inch-api-service
+spec:
+  selector:
+    app: cm-to-inch-api
+  ports:
+  - protocol: TCP
+    port: 80 # The port the service will be available on
+    targetPort: 8080 # The port the container is listening on
+  type: LoadBalancer # Or ClusterIP/NodePort depending on how you want to expose it
