@@ -48,12 +48,11 @@ jobs:
           tar -zxvf rancher-linux-amd64-*.tar.gz
           sudo mv rancher-*/rancher /usr/local/bin/
 
-          # Login to your Rancher instance (this part is the same as before)
-          rancher login ${{ secrets.RANCHER_URL }} --token ${{ secrets.RANCHER_TOKEN }} --insecure
+          # Login to your Rancher instance
+          yes | rancher login ${{ secrets.RANCHER_URL }} --token ${{ secrets.RANCHER_TOKEN }} --insecure
           rancher context switch clk3s-nada
 
       - name: Update Kubernetes Manifest and Deploy
         run: |
-          # This step remains the same
           sed -i 's|image: .*|image: ${{ secrets.DOCKERHUB_USERNAME }}/cm-to-inch-api:${{ github.sha }}|g' k8s/deployment.yaml
           rancher kubectl apply -f k8s/deployment.yaml
