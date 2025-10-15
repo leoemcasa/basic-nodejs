@@ -52,7 +52,7 @@ jobs:
 
           # Login to your Rancher instance
           yes | rancher login ${{ secrets.RANCHER_URL }} --token ${{ secrets.RANCHER_TOKEN }} --insecure
-          rancher context switch clk3s-nada
+          rancher context switch c-m-8p78lf5x:p-nb5tf
 
       - name: Update Kubernetes Manifest and Deploy
         run: |
