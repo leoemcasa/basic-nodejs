@@ -56,5 +56,5 @@ jobs:
 
       - name: Update Kubernetes Manifest and Deploy
         run: |
-          sed -i 's|image: .*|image: ${{ secrets.DOCKERHUB_USERNAME }}/basic-nodejs:${{ github.sha }}|g' k8s/deployment.yaml
+          sed -i 's|image: .*|image: ${{ secrets.DOCKERHUB_USERNAME }}/basic-nodejs:latest|g' k8s/deployment.yaml
           rancher kubectl apply -f k8s/deployment.yaml
