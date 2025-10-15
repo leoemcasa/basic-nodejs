@@ -5,7 +5,7 @@ kind: Deployment
 metadata:
   name: cm-to-inch-api-deployment
 spec:
-  replicas: 2 # Run two instances for availability
+  replicas: 1 # Run two instances for availability
   selector:
     matchLabels:
       app: cm-to-inch-api
