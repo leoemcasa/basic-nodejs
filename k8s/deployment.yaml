@@ -21,7 +21,7 @@ spec:
         ports:
         - containerPort: 3000
         env:
-        - name: GOOGLE_API_TOKEN
+        - name: GEMINI_API_KEY
           valueFrom:
             secretKeyRef:
               # This secret will need to be created in your K3s cluster
