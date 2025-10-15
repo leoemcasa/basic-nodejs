@@ -26,12 +26,14 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/cm-to-inch-api:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/cm-to-inch-api:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/basic-nodejs:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/basic-nodejs:latest
 
   deploy:
     needs: build-and-push
     runs-on: self-hosted
+    env:
+      IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/basic-nodejs
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -52,9 +54,8 @@ jobs:
 
           # Login to your Rancher instance
           { echo "yes"; sleep 1; echo "1"; } | rancher login ${{ secrets.RANCHER_URL }} --token ${{ secrets.RANCHER_TOKEN }} --insecure
-          rancher context switch c-m-8p78lf5x:p-nb5tf
 
       - name: Update Kubernetes Manifest and Deploy
         run: |
-          sed -i 's|image: .*|image: ${{ secrets.DOCKERHUB_USERNAME }}/basic-nodejs:latest|g' k8s/deployment.yaml
+          sed -i 's|image: .*|image: ${{ env.IMAGE_NAME }}:latest|g' k8s/deployment.yaml
           rancher kubectl apply -f k8s/deployment.yaml

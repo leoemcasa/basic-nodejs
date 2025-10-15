@@ -3,16 +3,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cm-to-inch-api-deployment
+  name: basic-nodejs-deployment
 spec:
   replicas: 1 # Run two instances for availability
   selector:
     matchLabels:
-      app: cm-to-inch-api
+      app: basic-nodejs
   template:
     metadata:
       labels:
-        app: cm-to-inch-api
+        app: basic-nodejs
     spec:
       containers:
       - name: api
@@ -31,10 +31,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: cm-to-inch-api-service
+  name: basic-nodejs-service
 spec:
   selector:
-    app: cm-to-inch-api
+    app: basic-nodejs
   ports:
   - protocol: TCP
     port: 80 # The port the service will be available on
