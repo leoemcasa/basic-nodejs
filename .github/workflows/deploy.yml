@@ -51,7 +51,7 @@ jobs:
           sudo mv rancher-*/rancher /usr/local/bin/
 
           # Login to your Rancher instance
-          printf 'yes\n1\n' | rancher login ${{ secrets.RANCHER_URL }} --token ${{ secrets.RANCHER_TOKEN }} --insecure
+          { echo "yes"; sleep 1; echo "1"; } | rancher login ${{ secrets.RANCHER_URL }} --token ${{ secrets.RANCHER_TOKEN }} --insecure
           rancher context switch c-m-8p78lf5x:p-nb5tf
 
       - name: Update Kubernetes Manifest and Deploy
