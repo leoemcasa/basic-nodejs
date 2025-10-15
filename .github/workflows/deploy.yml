@@ -25,7 +25,9 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/cm-to-inch-api:${{ github.sha }}
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/cm-to-inch-api:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/cm-to-inch-api:latest
 
   deploy:
     needs: build-and-push
@@ -54,5 +56,5 @@ jobs:
 
       - name: Update Kubernetes Manifest and Deploy
         run: |
-          sed -i 's|image: .*|image: ${{ secrets.DOCKERHUB_USERNAME }}/cm-to-inch-api:${{ github.sha }}|g' k8s/deployment.yaml
+          sed -i 's|image: .*|image: ${{ secrets.DOCKERHUB_USERNAME }}/basic-nodejs:${{ github.sha }}|g' k8s/deployment.yaml
           rancher kubectl apply -f k8s/deployment.yaml

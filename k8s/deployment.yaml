@@ -17,7 +17,7 @@ spec:
       containers:
       - name: api
         # IMPORTANT: This image name will be set by the GitHub Action
-        image: leoemcasa/cm-to-inch-api:latest
+        image: leoemcasa/basic-nodejs:latest
         ports:
         - containerPort: 8080
         env:
