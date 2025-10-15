@@ -19,7 +19,7 @@ spec:
         # IMPORTANT: This image name will be set by the GitHub Action
         image: leoemcasa/basic-nodejs:latest
         ports:
-        - containerPort: 8080
+        - containerPort: 3000
         env:
         - name: GOOGLE_API_TOKEN
           valueFrom:
@@ -38,5 +38,5 @@ spec:
   ports:
   - protocol: TCP
     port: 80 # The port the service will be available on
-    targetPort: 8080 # The port the container is listening on
+    targetPort: 3000 # The port the container is listening on
   type: LoadBalancer # Or ClusterIP/NodePort depending on how you want to expose it
