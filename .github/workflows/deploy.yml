@@ -44,7 +44,7 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/basic-nodejs:latest
 
   deploy:
-    needs: build-and-push
+    needs: build-analyze-and-push
     runs-on: self-hosted
     env:
       IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/basic-nodejs
