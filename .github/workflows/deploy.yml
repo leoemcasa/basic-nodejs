@@ -8,11 +8,13 @@ on:
       - main # Trigger this workflow on every push to the main branch
 
 jobs:
-  build-and-push:
-    runs-on: ubuntu-latest # The build can run on a standard GitHub runner
+  build-analyze-and-push:
+    runs-on: self-hosted # The build can run on a standard GitHub runner
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for accurate analysis
 
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@master
