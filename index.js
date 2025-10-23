@@ -32,7 +32,7 @@ app.get('/', (req, res) => {
     });
 });
 
-// Endpoint de conversão genérico
+// Endpoint de conversão genérico cm-inch-cm
 app.get('/convert', (req, res) => {
     const { from, to, value } = req.query;
 
