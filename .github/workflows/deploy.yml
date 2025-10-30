@@ -1,9 +1,9 @@
-name: DSV -> HMG -> PRD Deployment Pipeline
+name: Build and Deploy to K3S
 
 on:
   push:
     branches:
-      - develop # Gatilho ativado por push na branch 'develop'
+      - develop
 
 # Permissão necessária para o job final fazer o merge em 'main'
 permissions:
@@ -41,9 +41,12 @@ jobs:
         with:
           context: .
           push: true
+          pull: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/basic-nodejs:${{ github.sha }}
             ${{ secrets.DOCKERHUB_USERNAME }}/basic-nodejs:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/basic-nodejs:latest
+          cache-to: type=inline
 
   deploy-dsv:
     name: Deploy to DSV
