@@ -1,20 +1,23 @@
-# .github/workflows/deploy.yml
-
-name: Build and Deploy to K3S
+name: DSV -> HMG -> PRD Deployment Pipeline
 
 on:
   push:
     branches:
-      - main # Trigger this workflow on every push to the main branch
+      - develop # Gatilho ativado por push na branch 'develop'
+
+# Permissão necessária para o job final fazer o merge em 'main'
+permissions:
+  contents: write
 
 jobs:
   build-analyze-and-push:
-    runs-on: self-hosted # The build can run on a standard GitHub runner
+    name: Build, Analyze & Push Image
+    runs-on: self-hosted 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Fetch all history for accurate analysis
+          fetch-depth: 0 
 
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@master
@@ -22,7 +25,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         with:
-          # Arguments passed to the sonar-scanner
           args: >
             -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
             -Dsonar.sources=.
@@ -43,9 +45,14 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/basic-nodejs:${{ github.sha }}
             ${{ secrets.DOCKERHUB_USERNAME }}/basic-nodejs:latest
 
-  deploy:
+  deploy-dsv:
+    name: Deploy to DSV
     needs: build-analyze-and-push
     runs-on: self-hosted
+    
+    environment:
+      name: dsv
+      
     env:
       IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/basic-nodejs
     steps:
@@ -54,22 +61,69 @@ jobs:
 
       - name: Install Latest Rancher CLI and Configure Context
         run: |
-          # Use the GitHub API to find the URL for the latest linux-amd64 CLI release
           DOWNLOAD_URL=$(curl -s https://api.github.com/repos/rancher/cli/releases/latest | \
           grep "browser_download_url.*linux-amd64" | cut -d '"' -f 4)
-
-          # Download the file found above
-          echo "Downloading Rancher CLI from $DOWNLOAD_URL"
           wget $DOWNLOAD_URL
-
-          # The downloaded filename will change, so use a wildcard '*' to extract it
           tar -zxvf rancher-linux-amd64-*.tar.gz
           sudo mv rancher-*/rancher /usr/local/bin/
-
-          # Login to your Rancher instance
           { echo "yes"; sleep 1; echo "1"; } | rancher login ${{ secrets.RANCHER_URL }} --token ${{ secrets.RANCHER_TOKEN }} --insecure
 
-      - name: Update Kubernetes Manifest and Deploy
+      - name: Update Kubernetes Manifest and Deploy to DSV
         run: |
           sed -i 's|image: .*|image: ${{ env.IMAGE_NAME }}:latest|g' k8s/deployment.yaml
           rancher kubectl apply -f k8s/
+
+  deploy-hmg:
+    name: Deploy to HMG
+    needs: deploy-dsv
+    runs-on: ubuntu-latest # Pode ser ubuntu-latest, já que é um mock
+    
+    environment:
+      name: hmg
+      url: https://github.com/${{ github.repository }}/compare/main...${{ github.sha }}
+      
+    steps:
+      - name: Mock Deploy to HMG
+        run: |
+          echo "✅ Mock Deploy para HMG aprovado e concluído."
+
+  deploy-prd:
+    name: Deploy to PRD
+    needs: deploy-hmg
+    runs-on: ubuntu-latest
+    
+    environment:
+      name: prd
+      url: https://github.com/${{ github.repository }}/compare/main...${{ github.sha }}
+      
+    steps:
+      - name: Mock Deploy to PRD
+        run: |
+          echo "✅ Mock Deploy para PRD aprovado e concluído."
+
+  merge-to-main:
+    name: Merge Develop to Main
+    needs: deploy-prd
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Damos checkout na 'develop' (que é o ref do evento)
+          # e pegamos todo o histórico para o merge
+          ref: ${{ github.ref }}
+          fetch-depth: 0 
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge 'develop' into 'main'
+        run: |
+          git checkout main
+          git pull origin main
+          # Faz o merge do commit exato que passou por todo o pipeline
+          git merge ${{ github.sha }} --no-ff -m "CI: Merge 'develop' (commit ${{ github.sha }}) para 'main' após deploy em PRD"
+          git push origin main
