@@ -5,7 +5,7 @@ on:
     branches:
       - develop
 
-# Permissão necessária para o job final fazer o merge em 'main'
+# Permissão para o job final fazer o merge em 'main'
 permissions:
   contents: write
 
