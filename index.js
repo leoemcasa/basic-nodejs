@@ -102,7 +102,6 @@ app.get('/jogo/famosos-da-ia', async (req, res) => {
 });
 
 // Adicione endpoint de diagnóstico ao index.js
-
 app.get('/diagnostico/verificar-modelo', async (req, res) => {
     // Pegue o nome do modelo a ser testado da URL, ex: ?modelo=gemini-pro
     const nomeDoModelo = req.query.modelo;
